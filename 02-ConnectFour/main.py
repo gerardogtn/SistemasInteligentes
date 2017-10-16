@@ -325,10 +325,14 @@ class AlphaBetaMiniMax(BoundedMiniMax):
 
 class ConnectFourMiniMax(AlphaBetaMiniMax):
 
+
+
   def __init__(self, MAX_DEPTH, _id, opponent):
     AlphaBetaMiniMax.__init__(self, MAX_DEPTH, _id, opponent)
     self._id = _id
     self.opponent = opponent
+    self.TABLE = [[3, 4, 5, 5, 4, 3], [4, 6, 8, 8, 6, 4], [5, 8, 11, 11, 8, 5], [7, 10, 13, 13, 10, 7], \
+                  [5, 8, 11, 11, 8, 5], [4, 6, 8, 8, 6, 5], [3, 4, 5, 5, 4, 3]] 
 
   def evaluate(self, state, depth):
     checker = LineChecker(self._id, state.board.board, state.board.WIDTH, state.board.HEIGHT)
@@ -337,12 +341,20 @@ class ConnectFourMiniMax(AlphaBetaMiniMax):
     checker = LineChecker(self.opponent, state.board.board, state.board.WIDTH, state.board.HEIGHT)
     if checker.check():
       return - 1000 - depth
-    return 0 
+    acc = 0
+    for c in range(state.board.WIDTH):
+      for r in range(state.board.HEIGHT):
+        if state.board.board[c][r] == self._id:
+          acc += self.TABLE[c][r]
+        elif state.board.board[c][r] == self.opponent:
+          acc -= self.TABLE[c][r]
+
+    return acc    
 
 class MiniMaxPlayer(Player):
   def __init__(self, _id, width, height):
     Player.__init__(self, _id)
-    DEPTH = 2
+    DEPTH = 6
     self.minimax = ConnectFourMiniMax(DEPTH, _id, 2 if _id == 1 else 1)
     self.width = width
     self.height = height
