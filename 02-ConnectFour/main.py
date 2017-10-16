@@ -371,6 +371,140 @@ class ConsolePlayer(Player):
     v = int(input("Select the column [1-7]: "))
     return v
 
+class ConnectFourDFS():
+
+  def __init__(self, _id):
+    self._id = _id
+
+  def playOnBoard(self,board,posX,player):
+      if posX > 6:
+          return False
+
+      for y in range (5,-1,-1):
+          if board[posX][y] == 0:
+              if player == 1:
+                  board[posX][y] = "X"
+              else:
+                  board[posX][y] = "O"
+              return True
+
+      return False
+
+  def checkWinBot(self,board,symbol):
+      lineSize = 0
+
+      #revisan filas
+      for y in range (0,6):
+          for x in range (0,7):
+              if board[x][y] == symbol:
+                  lineSize += 1
+              else:
+                  lineSize = 0
+              if lineSize == 4:
+                  return True
+          lineSize = 0
+
+      #revisan columnas
+      for x in range (0,7):
+          for y in range (0,6):
+              if board[x][y] == symbol:
+                  lineSize += 1
+              else:
+                  lineSize = 0
+              if lineSize == 4:
+                  return True
+          lineSize = 0
+      return False
+
+  #funcion para revisar si hay empate
+  def checkTie(self,board):
+      spaces = 0
+      for x in range (0,7):
+          for y in range (0,6):
+              if board[x][y] == 0:
+                  spaces += 1
+      if spaces == 0:
+          return True
+      else:
+          return False
+
+  def run(self, board):
+      queue = []
+      state = 0
+
+      if self._id == 0:
+          originalSymbol = "X"
+          rivalSymbol = "O"
+      else:
+          originalSymbol = "O"
+          rivalSymbol = "X"
+
+      originalPlayer = self._id
+
+      #se hacen los posibles hijos (movimientos) del estado actual
+      for i in range (0,7):
+          from copy import deepcopy
+          state = deepcopy(board)
+
+          if self.playOnBoard(state,i,originalPlayer):
+              queue.insert(0,state)
+
+          originalState = deepcopy(state)
+          column = i
+
+          finish = False
+
+          #mientras siga habiendo hijos se sigue buscando un estado de victoria
+          while queue:
+              #si se llega a victoria dle rival se deshecha el estado
+              if self.checkWinBot(state,rivalSymbol) == True:
+                  state = queue.pop(0)
+              #si se llega al estado de victoria se regresa al movimiento original
+              elif self.checkWinBot(state,originalSymbol) == True:
+                  finish = True
+                  break
+              #si no hay victoria alguna de hace el movimiento del rival
+              else:
+                  opponentTurn = False
+                  #movimiento aleatorio del rival
+                  while opponentTurn == False:
+                      from random import randint
+                      opponentChip = randint(0,6)
+                      if self._id == 1:
+                          opponentTurn = self.playOnBoard (state,opponentChip,1)
+                          #se revisa si se hace un empate para ignorar el estado
+                          if self.checkTie(state):
+                              break
+                      else:
+                          #se revisa si se hace un empate para ignorar el estado
+                          opponentTurn = self.playOnBoard (state,opponentChip,0)
+                          if self.checkTie(state):
+                              break
+                  state2 = 0
+                  #se crean los hijos del estado actual con los movimientos posibles
+                  for i in range (0,7):
+                      from copy import deepcopy
+                      state2 = deepcopy(state)
+                      if self.playOnBoard(state2,i,self._id):
+                          queue.insert(0,state2)
+                  state = queue.pop(0)
+
+          #se regresa el estado (movimiento) siguiente
+          if finish == True:
+              print(column)
+              return column
+
+      return column
+
+class DFSPlayer(Player):
+    def __init__(self, id):
+      Player.__init__(self, id)
+      self.dfs = ConnectFourDFS(id)
+
+    def play(self, board):
+      v = self.dfs.run(board)
+      return v
+
 class MiConnectFour(ConnectFour):
   def __init__(self, width, height, playerOne, playerTwo):
     ConnectFour.__init__(self, width, height)
@@ -391,7 +525,7 @@ def main():
   usage = "usage: %prog [options]"
   parser = OptionParser(usage=usage)
   parser.add_option("-1", "--one", dest="one", type="string", default="",
-    help="Set the player one type: informed or notinformed")
+    help="Set the player one type: informed")
   parser.add_option("-2", "--two", dest="two", type="string", default="",
     help="Set the player one type: informed or notinformed")
   options, args = parser.parse_args()
@@ -404,8 +538,11 @@ def main():
 
   if options.one == "informed":
     playerOne = MiniMaxPlayer("1", WIDTH, HEIGHT)
+    
   if options.two == "informed":
-    playerTwo = MiniMaxPlayer("1", WIDTH, HEIGHT)
+    playerTwo = MiniMaxPlayer("2", WIDTH, HEIGHT)
+  elif options.two == "notinformed":
+    playerTwo = DFSPlayer("2")
 
 
   conectaTec = MiConnectFour(WIDTH, HEIGHT, playerOne, playerTwo)
