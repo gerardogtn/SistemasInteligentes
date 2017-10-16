@@ -7,40 +7,39 @@ class Player:
 
 class LineChecker:
 
-  def __init__(self, id, board, width, height):
+  def __init__(self, _id, board, width, height):
     self.board = board
-    self.id = id
+    self._id = _id
     self.WIDTH = width
     self.HEIGHT = height
 
   def check(self):
     for c in range(self.WIDTH):
       for r in range(self.HEIGHT):
-        if self.checkHorizontal(c, r) or self.checkVertical(c, r) or \
-          self.checkUpperDiagonal(c, r) or self.checkLowerDiagonal(c, r):
+        if self.checkHorizontal(c, r) or self.checkVertical(c, r) or self.checkUpperDiagonal(c, r) or self.checkLowerDiagonal(c, r):
           return True
 
     return False
 
   def checkHorizontal(self, c, r):
-    if (c < self.WIDTH - 3):
-      return self.board[c][r] == self.board[c + 1][r] == self.board[c + 2][r] == self.board[c + 3][r] == self.id
+    if c < self.WIDTH - 3:
+      return self.board[c][r] == self.board[c + 1][r] == self.board[c + 2][r] == self.board[c + 3][r] == self._id
     return False
 
   def checkVertical(self, c, r):
-    if (r < self.HEIGHT - 3):
-      return self.board[c][r] == self.board[c][r + 1] == self.board[c][r + 2] == self.board[c][r + 3] == self.id
+    if r < self.HEIGHT - 3:
+      return self.board[c][r] == self.board[c][r + 1] == self.board[c][r + 2] == self.board[c][r + 3] == self._id
     return False
 
   def checkUpperDiagonal(self, c, r):
-    if (c < self.WIDTH - 3 && r < self.HEIGHT - 3):
-      return self.board[c][r] == self.board[c + 1][r + 1] == self.board[c + 2][r + 2] == self.board[c + 3][r + 3] == self.id
+    if c < self.WIDTH - 3 and r < self.HEIGHT - 3:
+      return self.board[c][r] == self.board[c + 1][r + 1] == self.board[c + 2][r + 2] == self.board[c + 3][r + 3] == self._id
     return False
 
   def checkLowerDiagonal(self, c, r):
-    if (c > 3 && r > 3):
-      return self.board[c][r] == self.board[c - 1][r - 1] == self.board[c - 2][r - 2] == self.board[c - 3][r - 3] == self.id
-    return False
+    if c >= 3 and r < self.HEIGHT - 3:
+      return self.board[c][r] == self.board[c - 1][r + 1] == self.board[c - 2][r + 2] == self.board[c - 3][r + 3] == self._id
+    return False  
 
 
 class ConnectFourBoard:
@@ -76,12 +75,17 @@ class ConnectFourBoard:
   def printGame(self):
     print("\n")
     for r in range(self.HEIGHT):
+      print(r, end="| ")
       for c in range(self.WIDTH):
         print(self.mapChar(self.board[c][self.HEIGHT - r - 1]), end= " ")
       print("")
+    print(" ", end="| ")
     for c in range(self.WIDTH):
       print("_", end=" ")
     print("")
+
+
+    print(" ", end="  ")
     for c in range(self.WIDTH):
       print(str(c), end=" ")
     print("")
@@ -97,8 +101,8 @@ class ConnectFourBoard:
   def isGameOver(self):
     return self.won(1) or self.won(2) or self.isTie()
 
-  def won(self, id):
-    checker = LineChecker(id, self.board, self.WIDTH, self.HEIGHT)
+  def won(self, _id):
+    checker = LineChecker(_id, self.board, self.WIDTH, self.HEIGHT)
     return checker.check()
 
   def isTie(self):
@@ -190,7 +194,6 @@ class GameState:
 class ConnectFourGameState(GameState):
 
   def __init__(self, width, height, board):
-    from conecta_tec import ConnectFourBoard
     self.board = ConnectFourBoard(width, height)
     self.board.board = board
 
@@ -295,7 +298,7 @@ class AlphaBetaMiniMax(BoundedMiniMax):
           v = min(v, score)
           beta = min(beta, v)
           if beta <= alpha:
-            s = True
+            s = True  
     return (v, alpha, beta)
 
   def run(self, originalState):
@@ -322,19 +325,24 @@ class AlphaBetaMiniMax(BoundedMiniMax):
 
 class ConnectFourMiniMax(AlphaBetaMiniMax):
 
-  def __init__(self, MAX_DEPTH, id, opponent):
-    AlphaBetaMiniMax.__init__(self, MAX_DEPTH, id, opponent)
-    self.id = id
+  def __init__(self, MAX_DEPTH, _id, opponent):
+    AlphaBetaMiniMax.__init__(self, MAX_DEPTH, _id, opponent)
+    self._id = _id
     self.opponent = opponent
 
   def evaluate(self, state, depth):
-    ## TODO: 
+    checker = LineChecker(self._id, state.board.board, state.board.WIDTH, state.board.HEIGHT)
+    if checker.check(): 
+      return 1000 - depth
+    checker = LineChecker(self.opponent, state.board.board, state.board.WIDTH, state.board.HEIGHT)
+    if checker.check():
+      return - 1000 - depth
     return 0 
 
 class MiniMaxPlayer(Player):
   def __init__(self, _id, width, height):
     Player.__init__(self, _id)
-    DEPTH = 6
+    DEPTH = 2
     self.minimax = ConnectFourMiniMax(DEPTH, _id, 2 if _id == 1 else 1)
     self.width = width
     self.height = height
@@ -355,11 +363,12 @@ class MiConnectFour(ConnectFour):
   def __init__(self, width, height):
     ConnectFour.__init__(self, width, height)
 
-  def getPlayerOne(self, id):
-    return MiniMaxPlayer(id, self.width, self.height)
+  def getPlayerOne(self, _id):
+    # return ConsolePlayer(_id)
+    return MiniMaxPlayer(_id, self.width, self.height)
 
-  def getPlayerTwo(self, id):
-    return ConsolePlayer(id)
+  def getPlayerTwo(self, _id):
+    return ConsolePlayer(_id)
 
 def main():
   WIDTH = 7
@@ -367,3 +376,7 @@ def main():
 
   conectaTec = MiConnectFour(WIDTH, HEIGHT)
   conectaTec.play()
+
+
+if __name__ == '__main__':
+  main()
