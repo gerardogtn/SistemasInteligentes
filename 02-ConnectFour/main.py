@@ -414,6 +414,41 @@ class ConnectFourDFS():
               if lineSize == 4:
                   return True
           lineSize = 0
+
+      #revisan diagonales
+      diagonals = [[0,3,4],[0,4,5],[0,5,6],[0,6,6],[1,6,5],[2,6,4]]
+
+      for i in range (0,6):
+          y = diagonals[i][0]
+          x = diagonals[i][1]
+          count = diagonals [i][2]
+          for j in range (0,count):
+              if board[x][y] == symbol:
+                  lineSize += 1
+              else:
+                  lineSize = 0
+              x -= 1
+              y += 1
+              if lineSize == 4:
+                  return True
+          lineSize = 0
+
+      diagonals = [[2,0,4],[1,0,5],[0,0,6],[0,1,6],[0,2,5],[0,3,4]]
+
+      for i in range (0,6):
+          y = diagonals[i][0]
+          x = diagonals[i][1]
+          count = diagonals [i][2]
+          for j in range (0,count):
+              if board[x][y] == symbol:
+                  lineSize += 1
+              else:
+                  lineSize = 0
+              x += 1
+              y += 1
+              if lineSize == 4:
+                  return True
+          lineSize = 0
       return False
 
   #funcion para revisar si hay empate
@@ -491,7 +526,6 @@ class ConnectFourDFS():
 
           #se regresa el estado (movimiento) siguiente
           if finish == True:
-              print(column)
               return column
 
       return column
