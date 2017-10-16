@@ -372,21 +372,43 @@ class ConsolePlayer(Player):
     return v
 
 class MiConnectFour(ConnectFour):
-  def __init__(self, width, height):
+  def __init__(self, width, height, playerOne, playerTwo):
     ConnectFour.__init__(self, width, height)
+    self.playerOne = playerOne
+    self.playerTwo = playerTwo
 
   def getPlayerOne(self, _id):
-    # return ConsolePlayer(_id)
-    return MiniMaxPlayer(_id, self.width, self.height)
+    self.playerOne.id = _id
+    return self.playerOne
 
   def getPlayerTwo(self, _id):
-    return ConsolePlayer(_id)
+    self.playerTwo.id = _id
+    return self.playerTwo
 
 def main():
+  from optparse import OptionParser
+
+  usage = "usage: %prog [options]"
+  parser = OptionParser(usage=usage)
+  parser.add_option("-1", "--one", dest="one", type="string", default="",
+    help="Set the player one type: informed or notinformed")
+  parser.add_option("-2", "--two", dest="two", type="string", default="",
+    help="Set the player one type: informed or notinformed")
+  options, args = parser.parse_args()
+
   WIDTH = 7
   HEIGHT = 6
 
-  conectaTec = MiConnectFour(WIDTH, HEIGHT)
+  playerOne = ConsolePlayer("1")
+  playerTwo = ConsolePlayer("2")
+
+  if options.one == "informed":
+    playerOne = MiniMaxPlayer("1", WIDTH, HEIGHT)
+  if options.two == "informed":
+    playerTwo = MiniMaxPlayer("1", WIDTH, HEIGHT)
+
+
+  conectaTec = MiConnectFour(WIDTH, HEIGHT, playerOne, playerTwo)
   conectaTec.play()
 
 
